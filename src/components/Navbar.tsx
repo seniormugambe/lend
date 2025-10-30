@@ -1,8 +1,11 @@
 import { Button } from "./ui/button";
-import { Menu } from "lucide-react";
+import { Menu, User } from "lucide-react";
 import { HederaWalletConnect } from "./HederaWalletConnect";
+import { useNavigate } from "react-router-dom";
 
 export const Navbar = () => {
+  const navigate = useNavigate();
+  
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -24,6 +27,15 @@ export const Navbar = () => {
           </div>
           
           <div className="hidden md:flex items-center gap-4">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="gap-2"
+              onClick={() => navigate('/profile')}
+            >
+              <User className="h-4 w-4" />
+              Profile
+            </Button>
             <HederaWalletConnect />
             <Button variant="hero">List Equipment</Button>
           </div>

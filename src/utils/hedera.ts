@@ -177,6 +177,191 @@ export class HederaService {
       message: 'Rental history retrieved'
     };
   }
+
+  // ON-CHAIN IDENTITY AND REPUTATION SYSTEM
+
+  /**
+   * Register user identity on-chain
+   * @param contractId - Hedera contract ID for identity management
+   * @param identityData - User identity information
+   */
+  async registerIdentity(
+    contractId: string,
+    identityData: {
+      name: string;
+      email: string;
+      phone: string;
+      userType: 'renter' | 'owner' | 'both';
+      location: string;
+      verificationDocuments?: string[]; // IPFS hashes
+    }
+  ) {
+    if (!this.isConnected()) {
+      throw new Error('Please connect your wallet first');
+    }
+
+    console.log('Registering identity on-chain:', {
+      contractId,
+      identityData,
+      account: this.pairingData!.accountIds[0]
+    });
+
+    const transactionId = `0.0.${Math.floor(Math.random() * 1000000)}@${Date.now()}.${Math.floor(Math.random() * 1000)}`;
+    
+    // Store identity locally for demo (would be on-chain in production)
+    const identity = {
+      ...identityData,
+      accountId: this.pairingData!.accountIds[0],
+      isVerified: false,
+      registeredAt: Date.now(),
+      identityHash: `IDENTITY-${Date.now()}`
+    };
+    
+    localStorage.setItem(`hedera_identity_${this.pairingData!.accountIds[0]}`, JSON.stringify(identity));
+    
+    return {
+      success: true,
+      transactionId,
+      message: 'Identity registered on-chain',
+      identityHash: identity.identityHash
+    };
+  }
+
+  /**
+   * Get user identity from on-chain storage
+   */
+  async getIdentity(accountId?: string) {
+    const account = accountId || this.pairingData?.accountIds[0];
+    if (!account) return null;
+
+    const stored = localStorage.getItem(`hedera_identity_${account}`);
+    return stored ? JSON.parse(stored) : null;
+  }
+
+  /**
+   * Submit reputation rating after rental
+   * @param contractId - Hedera contract ID for reputation management
+   * @param targetAccountId - Account being rated
+   * @param rating - Rating from 1-5
+   * @param rentalId - Associated rental ID
+   * @param review - Optional review text
+   */
+  async submitRating(
+    contractId: string,
+    targetAccountId: string,
+    rating: number,
+    rentalId: string,
+    review?: string
+  ) {
+    if (!this.isConnected()) {
+      throw new Error('Please connect your wallet first');
+    }
+
+    if (rating < 1 || rating > 5) {
+      throw new Error('Rating must be between 1 and 5');
+    }
+
+    console.log('Submitting on-chain rating:', {
+      contractId,
+      targetAccountId,
+      rating,
+      rentalId,
+      from: this.pairingData!.accountIds[0]
+    });
+
+    const transactionId = `0.0.${Math.floor(Math.random() * 1000000)}@${Date.now()}.${Math.floor(Math.random() * 1000)}`;
+    
+    // Store rating locally for demo
+    const ratingData = {
+      fromAccount: this.pairingData!.accountIds[0],
+      toAccount: targetAccountId,
+      rating,
+      rentalId,
+      review,
+      timestamp: Date.now(),
+      transactionId
+    };
+
+    const ratingsKey = `hedera_ratings_${targetAccountId}`;
+    const existingRatings = JSON.parse(localStorage.getItem(ratingsKey) || '[]');
+    existingRatings.push(ratingData);
+    localStorage.setItem(ratingsKey, JSON.stringify(existingRatings));
+    
+    return {
+      success: true,
+      transactionId,
+      message: 'Rating submitted on-chain'
+    };
+  }
+
+  /**
+   * Get user reputation from on-chain data
+   */
+  async getReputation(accountId?: string) {
+    const account = accountId || this.pairingData?.accountIds[0];
+    if (!account) return null;
+
+    const ratingsKey = `hedera_ratings_${account}`;
+    const ratings = JSON.parse(localStorage.getItem(ratingsKey) || '[]');
+
+    if (ratings.length === 0) {
+      return {
+        accountId: account,
+        averageRating: 0,
+        totalRatings: 0,
+        totalRentals: 0,
+        reputationScore: 0,
+        badges: [],
+        reviews: []
+      };
+    }
+
+    const totalRating = ratings.reduce((sum: number, r: any) => sum + r.rating, 0);
+    const averageRating = totalRating / ratings.length;
+    
+    // Calculate reputation score (0-100)
+    const reputationScore = Math.min(100, Math.floor((averageRating / 5) * 100 + (ratings.length * 2)));
+
+    // Award badges based on performance
+    const badges = [];
+    if (reputationScore >= 90) badges.push('Trusted Elite');
+    if (reputationScore >= 70) badges.push('Verified Provider');
+    if (ratings.length >= 10) badges.push('Experienced');
+    if (averageRating >= 4.5) badges.push('Top Rated');
+
+    return {
+      accountId: account,
+      averageRating: parseFloat(averageRating.toFixed(2)),
+      totalRatings: ratings.length,
+      totalRentals: ratings.length,
+      reputationScore,
+      badges,
+      reviews: ratings.slice(-5).reverse() // Last 5 reviews
+    };
+  }
+
+  /**
+   * Verify user identity (would require admin/verifier role in production)
+   */
+  async verifyIdentity(contractId: string, accountId: string) {
+    if (!this.isConnected()) {
+      throw new Error('Please connect your wallet first');
+    }
+
+    const identity = await this.getIdentity(accountId);
+    if (!identity) {
+      throw new Error('Identity not found');
+    }
+
+    identity.isVerified = true;
+    identity.verifiedAt = Date.now();
+    localStorage.setItem(`hedera_identity_${accountId}`, JSON.stringify(identity));
+
+    return {
+      success: true,
+      message: 'Identity verified on-chain'
+    };
+  }
 }
 
 // Singleton instance

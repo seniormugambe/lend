@@ -1,7 +1,8 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { MapPin, Star } from "lucide-react";
+import { MapPin, Star, Shield } from "lucide-react";
+import { ReputationBadge } from "./ReputationBadge";
 import constructionTools from "@/assets/construction-tools.jpg";
 import heavyEquipment from "@/assets/heavy-equipment.jpg";
 import agriculturalEquipment from "@/assets/agricultural-equipment.jpg";
@@ -17,6 +18,12 @@ const equipment = [
     rating: 4.9,
     reviews: 128,
     verified: true,
+    ownerReputation: {
+      score: 92,
+      totalRatings: 128,
+      averageRating: 4.9,
+      isVerified: true
+    }
   },
   {
     id: 2,
@@ -28,6 +35,12 @@ const equipment = [
     rating: 5.0,
     reviews: 95,
     verified: true,
+    ownerReputation: {
+      score: 98,
+      totalRatings: 95,
+      averageRating: 5.0,
+      isVerified: true
+    }
   },
   {
     id: 3,
@@ -39,6 +52,12 @@ const equipment = [
     rating: 4.8,
     reviews: 156,
     verified: true,
+    ownerReputation: {
+      score: 88,
+      totalRatings: 156,
+      averageRating: 4.8,
+      isVerified: true
+    }
   },
 ];
 
@@ -73,15 +92,15 @@ export const FeaturedEquipment = () => {
                 )}
               </div>
               
-              <div className="p-6">
-                <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
+              <div className="p-6 space-y-3">
+                <h3 className="text-xl font-semibold">{item.title}</h3>
                 
-                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <MapPin className="w-4 h-4" />
                   <span>{item.location}</span>
                 </div>
                 
-                <div className="flex items-center gap-2 mb-4">
+                <div className="flex items-center gap-2">
                   <div className="flex items-center gap-1">
                     <Star className="w-4 h-4 fill-accent text-accent" />
                     <span className="font-medium">{item.rating}</span>
@@ -90,8 +109,24 @@ export const FeaturedEquipment = () => {
                     ({item.reviews} reviews)
                   </span>
                 </div>
+
+                {/* Owner Reputation */}
+                <div className="p-2 bg-secondary/50 rounded-lg">
+                  <div className="text-xs text-muted-foreground mb-1.5 flex items-center gap-1">
+                    <Shield className="h-3 w-3" />
+                    Owner Reputation
+                  </div>
+                  <ReputationBadge
+                    score={item.ownerReputation.score}
+                    totalRatings={item.ownerReputation.totalRatings}
+                    averageRating={item.ownerReputation.averageRating}
+                    isVerified={item.ownerReputation.isVerified}
+                    size="sm"
+                    showDetails={false}
+                  />
+                </div>
                 
-                <div className="flex items-end justify-between">
+                <div className="flex items-end justify-between pt-2">
                   <div>
                     <span className="text-3xl font-bold text-primary">{item.price}</span>
                     <span className="text-sm text-muted-foreground ml-1">{item.period}</span>
