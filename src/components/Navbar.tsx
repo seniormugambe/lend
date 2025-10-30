@@ -1,5 +1,6 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "./ui/button";
 import { Menu } from "lucide-react";
+import { HederaWalletConnect } from "./HederaWalletConnect";
 
 export const Navbar = () => {
   return (
@@ -23,7 +24,7 @@ export const Navbar = () => {
           </div>
           
           <div className="hidden md:flex items-center gap-4">
-            <Button variant="ghost">Sign In</Button>
+            <HederaWalletConnect />
             <Button variant="hero">List Equipment</Button>
           </div>
           
